@@ -6,8 +6,10 @@ var express = require("express");
 var mime = require("mime");
 
 var app = express();
+// Settings
 app.set("baseURL", "/media/petschekr/Ze 2nd Hard Driv/");
-//app.set("baseURL", "/home/petschekr/");
+app.enable("transcoding");
+app.enable("print-root-directory");
 
 var isNumber = function (n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
@@ -50,10 +52,19 @@ function getHTMLForPath (path) {
 	return html;
 }
 
+// Serve the root directory
 app.get("/", function (request, response) {
 	response.send(getHTMLForPath(""));
 });
-app.get("/video/*", function (request, response) {
+
+// List out subdirectories
+app.get("/dir/*", function (request, response) {
+	var zepath = request.params[0];
+	response.send(getHTMLForPath(zepath));
+});
+
+// Returns a raw media stream that can be used with an HTML5 video player
+app.get("/media/*", function (request, response) {
 	var zefile = request.params[0];
 	var zemime = mime.lookup(zefile);
 
@@ -111,12 +122,8 @@ app.get("/video/*", function (request, response) {
 	var vidStream = fs.createReadStream(app.get("baseURL") + zefile, {flags: "r", start: vidStart, end: vidEnd});
 	vidStream.pipe(response);
 });
-app.get("/dir/*", function (request, response) {
-	var zepath = request.params[0];
-	response.send(getHTMLForPath(zepath));
-});
 
 PORT = 32200;
 app.listen(PORT, function() {
-	console.log("The server is listening on port " + PORT)
+	console.log("The server is listening on port " + PORT);
 });
