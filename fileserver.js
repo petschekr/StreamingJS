@@ -8,10 +8,17 @@ var cheerio = require("cheerio");
 
 var app = express();
 // Settings
-app.set("baseURL", "/media/petschekr/Ze 2nd Hard Driv/");
+// Set the uppermost reachable directory to be served
+//app.set("baseURL", "/media/petschekr/Ze 2nd Hard Driv/");
+app.set("baseURL", "/Users/Ryan/Documents/500 Drive/Media/");
+// Enable transcoding to transcode video to play in your browser if the format is unsupported or to lower the resolution
 app.enable("transcoding");
+// Enable printing of the Base URL in directory and file listings
 app.enable("print-root-directory");
 
+if (app.get("baseURL")[app.get("baseURL").length - 1] !== "/") {
+	app.set("baseURL", app.get("baseURL") + "/");
+}
 var isNumber = function (n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
 }
