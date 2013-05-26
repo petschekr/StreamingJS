@@ -4,6 +4,7 @@ var urllib = require("url");
 
 var express = require("express");
 var mime = require("mime");
+var cheerio = require("cheerio");
 
 var app = express();
 // Settings
