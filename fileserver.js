@@ -102,7 +102,7 @@ app.get("/media/*", function (request, response) {
 		"Cache-Control": "public",
 		"Connection": "keep-alive",
 		"Content-Type": zemime,
-		"Content-Disposition": "inline; filename=" + filename + ";"
+		"Content-Disposition": "inline; filename=\"" + filename + "\";"
 	};
 
 	if (rangeRequest) {
