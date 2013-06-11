@@ -8,8 +8,8 @@ var cheerio = require("cheerio");
 
 var app = express();
 // Settings
-app.set("baseURL", "/media/petschekr/Ze 2nd Hard Driv/");
-app.enable("transcoding");
+app.set("baseURL", "/home/pi/NASDrive/Media/");
+app.disable("transcoding");
 app.enable("print-root-directory");
 
 var isNumber = function (n) {
