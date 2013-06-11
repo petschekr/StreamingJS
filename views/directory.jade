@@ -1,0 +1,25 @@
+doctype 5
+html(lang="en")
+	head
+		meta(charset="utf-8")
+		title #{Dir}
+		meta(name="viewport", content="width=device-width, initial-scale=1.0")
+		link(href="/bootstrap/themes/cosmo.min.css", rel="stylesheet", media="screen")
+		style
+			.container {
+				width: auto;
+				max-width: 680px;
+			}
+	body
+		#container
+			ul.breadcrumb
+				- var directory = Dir;
+				- directory = directory.split("/");
+				- if (directory[0] === "") {directory.shift()};
+				- if (directory[directory.length - 1] === "") {directory.pop()};
+				- var lastDirectory = directory.pop();
+				for dir in directory
+					li
+						a(href="../")= dir
+							span.divider /
+				li.active= lastDirectory
