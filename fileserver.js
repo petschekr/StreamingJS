@@ -123,7 +123,7 @@ app.get("/media/*", function (request, response) {
 	vidStream.pipe(response);
 });
 
-PORT = 32200;
+PORT = 8080;
 app.listen(PORT, function() {
 	console.log("The server is listening on port " + PORT);
 });
