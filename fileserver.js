@@ -66,7 +66,12 @@ app.get("/", function (request, response) {
 // List out subdirectories
 app.get("/dir/*", function (request, response) {
 	var zepath = request.params[0];
-	response.send(getHTMLForPath(zepath));
+	response.render("directory.jade", {Dir: zepath}, function(err, html) {
+		if (err)
+			throw err
+		response.send(html);
+	});
+	//response.send(getHTMLForPath(zepath));
 });
 
 // Returns a raw media stream that can be used with an HTML5 video player
