@@ -1,6 +1,7 @@
 var http = require("http");
 var fs = require("fs");
 var urllib = require("url");
+var pathModule = require("path");
 
 var express = require("express");
 var mime = require("mime");
@@ -9,8 +10,7 @@ var cheerio = require("cheerio");
 var app = express();
 // Settings
 // Set the uppermost reachable directory to be served
-//app.set("baseURL", "/media/petschekr/Ze 2nd Hard Driv/");
-app.set("baseURL", "/Users/Ryan/Documents/500 Drive/Media/");
+app.set("baseURL", "/home/petschekr/Videos/");
 // Enable transcoding to transcode video to play in your browser if the format is unsupported or to lower the resolution
 app.enable("transcoding");
 // Enable printing of the Base URL in directory and file listings
@@ -43,9 +43,7 @@ function getHTMLForPath (path) {
 	}
 	var html = "";
 	if (origPath !== "") {
-		abovePath = origPath.split("/");
-		abovePath.pop();
-		abovePath = abovePath.join("/");
+		abovePath = pathModule.join(origPath, "../");
 		if (abovePath !== "") {
 			abovePath = 'dir/' + abovePath;
 		}
@@ -62,7 +60,7 @@ function getHTMLForPath (path) {
 
 // Serve the root directory
 app.get("/", function (request, response) {
-	response.send(getHTMLForPath(""));
+	response.redirect("/dir/");
 });
 
 // List out subdirectories
@@ -131,7 +129,7 @@ app.get("/media/*", function (request, response) {
 	vidStream.pipe(response);
 });
 
-PORT = 32200;
+PORT = 8080;
 app.listen(PORT, function() {
 	console.log("The server is listening on port " + PORT);
 });
