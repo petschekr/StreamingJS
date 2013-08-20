@@ -1,6 +1,7 @@
 var http = require("http");
 var fs = require("fs");
 var urllib = require("url");
+var pathModule = require("path");
 
 var express = require("express");
 var mime = require("mime");
@@ -8,7 +9,7 @@ var cheerio = require("cheerio");
 
 var app = express();
 // Settings
-app.set("baseURL", "/media/petschekr/Ze 2nd Hard Driv/");
+app.set("baseURL", "/home/petschekr/Videos/");
 app.enable("transcoding");
 app.enable("print-root-directory");
 
@@ -36,9 +37,7 @@ function getHTMLForPath (path) {
 	}
 	var html = "";
 	if (origPath !== "") {
-		abovePath = origPath.split("/");
-		abovePath.pop();
-		abovePath = abovePath.join("/");
+		abovePath = pathModule.join(origPath, "../");
 		if (abovePath !== "") {
 			abovePath = 'dir/' + abovePath;
 		}
@@ -55,7 +54,7 @@ function getHTMLForPath (path) {
 
 // Serve the root directory
 app.get("/", function (request, response) {
-	response.send(getHTMLForPath(""));
+	response.redirect("/dir/");
 });
 
 // List out subdirectories
