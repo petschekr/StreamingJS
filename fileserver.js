@@ -9,7 +9,7 @@ var cheerio = require("cheerio");
 
 var app = express();
 // Settings
-app.set("baseURL", "/");
+app.set("baseURL", "/home/petschekr/Videos/");
 app.disable("hidden-files");
 app.enable("transcoding");
 app.enable("print-root-directory");
