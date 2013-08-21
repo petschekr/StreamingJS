@@ -49,7 +49,7 @@ function getHTMLForPath (path) {
 	var dirlist = []
 	var filelist = []
 	for (var i = 0; i < files.length; i++) {
-		if (path.basename(path + files[i])[0] === "." && app.enabled("hidden-files")) {
+		if (pathModule.basename(path + files[i])[0] === "." && app.enabled("hidden-files")) {
 			continue;
 		}
 		var stats = fs.statSync(app.get("baseURL") + path + files[i]);
