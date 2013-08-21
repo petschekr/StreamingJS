@@ -33,6 +33,13 @@ function readableSize (size) {
 	return size.toFixed(2) + " " + units[unitIndex];
 }
 function getHTMLForPath (path) {
+	// Check if path is higher than it should be
+	compiledPath = pathModule.join(app.get("baseURL"), path);
+	if (!compiledPath.match(new RegExp("^" + app.get("baseURL")))) {
+		// Failed the path check
+		return false;
+	}
+
 	origPath = path;
 	if (path !== "") {
 		path += "/";
@@ -76,7 +83,13 @@ app.get("/", function (request, response) {
 // List out subdirectories
 app.get("/dir/*", function (request, response) {
 	var zepath = request.params[0];
-	response.send(getHTMLForPath(zepath));
+	var htmlToSend = getHTMLForPath(zepath);
+	if (htmlToSend === false) {
+		response.redirect("/dir/");
+	}
+	else {
+		response.send(getHTMLForPath(zepath));
+	}
 });
 // Returns file information
 app.get("/file/*", function (request, response) {
