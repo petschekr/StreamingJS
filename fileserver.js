@@ -15,6 +15,22 @@ app.enable("print-root-directory");
 
 var isNumber = function (n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
+};
+function readableSize (size) {
+	origSize = size;
+	unitSize = 1024;
+	unitIndex = 0;
+	units = ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB"]
+	while (size >= unitSize) {
+		unitIndex++;
+		size /= unitSize;
+	}
+	if (unitIndex >= units.length) {
+		// Exceeded labels
+		unitIndex = 0;
+		size = origSize;
+	}
+	return size.toFixed(2) + " " + units[unitIndex];
 }
 function getHTMLForPath (path) {
 	origPath = path;
@@ -62,9 +78,61 @@ app.get("/dir/*", function (request, response) {
 	var zepath = request.params[0];
 	response.send(getHTMLForPath(zepath));
 });
+// Returns file information
+app.get("/file/*", function (request, response) {
+	var zefile = request.params[0];
+	zefile = pathModule.basename(zefile);
+	htmldoc = fs.readFileSync("file.html", {encoding: "utf8"});
+	$ = cheerio.load(htmldoc);
+	$("title").text(zefile);
+	$("h1").text(zefile);
+	mimeType = mime.lookup(zefile);
+	videoType = mimeType.split("/")[0];
+	if (videoType === "video" || videoType === "audio") {
+		videoType = "Stream " + videoType;
+		$("div > a").text(videoType).attr("href", "/stream/" + request.params[0]);
+	}
+	else if (videoType === "image") {
+		try {
+			image = fs.readFileSync(app.get("baseURL") + request.params[0]);
+		}
+		catch (e){}
+		image = image.toString("base64");
+		dataURI = "data:" + mimeType + ";base64," + image;
+		staticLink = "/raw/" + request.params[0];
+		$("div").html('<a href="' + staticLink + '"><img style="max-width:100%;" alt="' + zefile + '" src="' + dataURI + '" /></a>');
+		$("body").attr("style", "padding-bottom: 0;");
+	}
+	else {
+		$("div").remove();
+	}
+	fs.stat(app.get("baseURL") + request.params[0], function (err, stats) {
+		if (err) {
+			// File doesn't exist
+			response.send("<b>" + request.params[0] + "</b> doesn't exist");
+			return
+		}
+		$("#mime").text(mimeType);
+		$("#ctime").text(stats.ctime.toString());
+		$("#size").text(readableSize(stats.size));
+		response.send($.html());
+	});
+});
+app.get("/raw/*", function (request, response) {
+	var zefile = request.params[0];
+	var mimeType = mime.lookup(zefile);
+	fs.readFile(app.get("baseURL") + zefile, function (err, file) {
+		if (err) {
+			response.send("Couldn't retrieve the requested file");
+			return
+		}
+		response.type(mimeType);
+		response.send(file);
+	});
+});
 
 // Returns a raw media stream that can be used with an HTML5 video player
-app.get("/media/*", function (request, response) {
+app.get("/stream/*", function (request, response) {
 	var zefile = request.params[0];
 	var zemime = mime.lookup(zefile);
 
