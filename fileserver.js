@@ -9,7 +9,8 @@ var cheerio = require("cheerio");
 
 var app = express();
 // Settings
-app.set("baseURL", "/home/petschekr/Videos/");
+app.set("baseURL", "/");
+app.enable("hidden-files");
 app.enable("transcoding");
 app.enable("print-root-directory");
 
@@ -48,6 +49,9 @@ function getHTMLForPath (path) {
 	var dirlist = []
 	var filelist = []
 	for (var i = 0; i < files.length; i++) {
+		if (path.basename(path + files[i])[0] === "." && app.enabled("hidden-files")) {
+			continue;
+		}
 		var stats = fs.statSync(app.get("baseURL") + path + files[i]);
 		if (stats.isDirectory()) {
 			// File is a directory
