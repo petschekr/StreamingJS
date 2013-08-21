@@ -10,7 +10,7 @@ var cheerio = require("cheerio");
 var app = express();
 // Settings
 app.set("baseURL", "/");
-app.enable("hidden-files");
+app.disable("hidden-files");
 app.enable("transcoding");
 app.enable("print-root-directory");
 
@@ -71,10 +71,18 @@ function getHTMLForPath (path) {
 		html += '<a href="/' + abovePath + '"><i><b>Go up</b></i></a><br /><br />';
 	}
 	for (var i = 0; i < dirlist.length; i++) {
-		html += '<a href="/dir/' + path + dirlist[i] + '"><b>' + dirlist[i] + '/</b></a><br />';
+		var style = "";
+		if (pathModule.basename(path + dirlist[i])[0] === ".") {
+			style = "opacity: 0.6;";
+		}
+		html += '<a style="' + style + '" href="/dir/' + path + dirlist[i] + '"><b>' + dirlist[i] + '/</b></a><br />';
 	}
 	for (var i = 0; i < filelist.length; i++) {
-		html += '<a href="/file/' + path + filelist[i] + '">' + filelist[i] + '</a><br />';
+		var style = "";
+		if (pathModule.basename(path + filelist[i])[0] === ".") {
+			style = "opacity: 0.6;";
+		}
+		html += '<a style="' + style + '" href="/file/' + path + filelist[i] + '">' + filelist[i] + '</a><br />';
 	}
 	return html;
 }
