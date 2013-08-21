@@ -1,4 +1,4 @@
-## node-media
+## StreamingJS
 An HTML5 media center built with Node.js
 
 #### Dependencies
