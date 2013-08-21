@@ -91,32 +91,37 @@ app.get("/file/*", function (request, response) {
 	if (videoType === "video" || videoType === "audio") {
 		videoType = "Stream " + videoType;
 		$("div > a").text(videoType).attr("href", "/stream/" + request.params[0]);
+		continueResponse();
 	}
 	else if (videoType === "image") {
-		try {
-			image = fs.readFileSync(app.get("baseURL") + request.params[0]);
-		}
-		catch (e){}
-		image = image.toString("base64");
-		dataURI = "data:" + mimeType + ";base64," + image;
-		staticLink = "/raw/" + request.params[0];
-		$("div").html('<a href="' + staticLink + '"><img style="max-width:100%;" alt="' + zefile + '" src="' + dataURI + '" /></a>');
-		$("body").attr("style", "padding-bottom: 0;");
+		fs.readFile(app.get("baseURL") + request.params[0], function (err, image) {
+			if (err)
+				return
+			image = image.toString("base64");
+			dataURI = "data:" + mimeType + ";base64," + image;
+			staticLink = "/raw/" + request.params[0];
+			$("div").html('<a href="' + staticLink + '"><img style="max-width:100%;" alt="' + zefile + '" src="' + dataURI + '" /></a>');
+			$("body").attr("style", "padding-bottom: 0;");
+			continueResponse();
+		});
 	}
 	else {
 		$("div").remove();
+		continueResponse();
 	}
-	fs.stat(app.get("baseURL") + request.params[0], function (err, stats) {
-		if (err) {
-			// File doesn't exist
-			response.send("<b>" + request.params[0] + "</b> doesn't exist");
-			return
-		}
-		$("#mime").text(mimeType);
-		$("#ctime").text(stats.ctime.toString());
-		$("#size").text(readableSize(stats.size));
-		response.send($.html());
-	});
+	function continueResponse() {
+		fs.stat(app.get("baseURL") + request.params[0], function (err, stats) {
+			if (err) {
+				// File doesn't exist
+				response.send("<b>" + request.params[0] + "</b> doesn't exist");
+				return
+			}
+			$("#mime").text(mimeType);
+			$("#ctime").text(stats.ctime.toString());
+			$("#size").text(readableSize(stats.size));
+			response.send($.html());
+		});
+	}
 });
 app.get("/raw/*", function (request, response) {
 	var zefile = request.params[0];
