@@ -15,9 +15,32 @@ app.enable("print-root-directory");
 
 var isNumber = function (n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
+};
+function readableSize (size) {
+	var origSize = size;
+	var unitSize = 1024;
+	var unitIndex = 0;
+	var units = ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB"]
+	while (size >= unitSize) {
+		unitIndex++;
+		size /= unitSize;
+	}
+	if (unitIndex >= units.length) {
+		// Exceeded labels
+		unitIndex = 0;
+		size = origSize;
+	}
+	return size.toFixed(2) + " " + units[unitIndex];
 }
 function getHTMLForPath (path) {
-	origPath = path;
+	// Check if path is higher than it should be
+	var compiledPath = pathModule.join(app.get("baseURL"), path);
+	if (!compiledPath.match(new RegExp("^" + app.get("baseURL")))) {
+		// Failed the path check
+		return false;
+	}
+
+	var origPath = path;
 	if (path !== "") {
 		path += "/";
 	}
@@ -25,7 +48,7 @@ function getHTMLForPath (path) {
 	var dirlist = []
 	var filelist = []
 	for (var i = 0; i < files.length; i++) {
-		stats = fs.statSync(app.get("baseURL") + path + files[i]);
+		var stats = fs.statSync(app.get("baseURL") + path + files[i]);
 		if (stats.isDirectory()) {
 			// File is a directory
 			dirlist.push(files[i]);
@@ -37,7 +60,7 @@ function getHTMLForPath (path) {
 	}
 	var html = "";
 	if (origPath !== "") {
-		abovePath = pathModule.join(origPath, "../");
+		var abovePath = pathModule.join(origPath, "../");
 		if (abovePath !== "") {
 			abovePath = 'dir/' + abovePath;
 		}
@@ -60,11 +83,74 @@ app.get("/", function (request, response) {
 // List out subdirectories
 app.get("/dir/*", function (request, response) {
 	var zepath = request.params[0];
-	response.send(getHTMLForPath(zepath));
+	var htmlToSend = getHTMLForPath(zepath);
+	if (htmlToSend === false) {
+		response.redirect("/dir/");
+	}
+	else {
+		response.send(getHTMLForPath(zepath));
+	}
+});
+// Returns file information
+app.get("/file/*", function (request, response) {
+	var zefile = request.params[0];
+	zefile = pathModule.basename(zefile);
+	var htmldoc = fs.readFileSync("file.html", {encoding: "utf8"});
+	$ = cheerio.load(htmldoc);
+	$("title").text(zefile);
+	$("h1").text(zefile);
+	var mimeType = mime.lookup(zefile);
+	var videoType = mimeType.split("/")[0];
+	if (videoType === "video" || videoType === "audio") {
+		videoType = "Stream " + videoType;
+		$("div > a").text(videoType).attr("href", "/stream/" + request.params[0]);
+		continueResponse();
+	}
+	else if (videoType === "image") {
+		fs.readFile(app.get("baseURL") + request.params[0], function (err, image) {
+			if (err)
+				return
+			image = image.toString("base64");
+			var dataURI = "data:" + mimeType + ";base64," + image;
+			var staticLink = "/raw/" + request.params[0];
+			$("div").html('<a href="' + staticLink + '"><img style="max-width:100%;" alt="' + zefile + '" src="' + dataURI + '" /></a>');
+			$("body").attr("style", "padding-bottom: 0;");
+			continueResponse();
+		});
+	}
+	else {
+		$("div").remove();
+		continueResponse();
+	}
+	function continueResponse() {
+		fs.stat(app.get("baseURL") + request.params[0], function (err, stats) {
+			if (err) {
+				// File doesn't exist
+				response.send("<b>" + request.params[0] + "</b> doesn't exist");
+				return
+			}
+			$("#mime").text(mimeType);
+			$("#ctime").text(stats.ctime.toString());
+			$("#size").text(readableSize(stats.size));
+			response.send($.html());
+		});
+	}
+});
+app.get("/raw/*", function (request, response) {
+	var zefile = request.params[0];
+	var mimeType = mime.lookup(zefile);
+	fs.readFile(app.get("baseURL") + zefile, function (err, file) {
+		if (err) {
+			response.send("Couldn't retrieve the requested file");
+			return
+		}
+		response.type(mimeType);
+		response.send(file);
+	});
 });
 
 // Returns a raw media stream that can be used with an HTML5 video player
-app.get("/media/*", function (request, response) {
+app.get("/stream/*", function (request, response) {
 	var zefile = request.params[0];
 	var zemime = mime.lookup(zefile);
 
