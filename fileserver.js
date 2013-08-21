@@ -119,7 +119,8 @@ app.get("/file/*", function (request, response) {
 		});
 	}
 	else {
-		$("div").remove();
+		var staticLink = "/raw/" + request.params[0];
+		$("div > a").text("View raw").attr("href", staticLink);
 		continueResponse();
 	}
 	function continueResponse() {
