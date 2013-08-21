@@ -8,8 +8,8 @@ An HTML5 media center built with Node.js
     - `npm install mime`
 - cheerio
     - `npm install cheerio`
-- node-fluent-ffmpeg
-    - `npm install fluent-ffmpeg`
 
 ###### Install all
-`npm install express mime cheerio fluent-ffmpeg`
+`npm install express mime cheerio`
+
+**You must change the directory path on `Line 12` to the uppermost directory you want people to access**
