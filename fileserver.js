@@ -6,11 +6,15 @@ var pathModule = require("path");
 var express = require("express");
 var mime = require("mime");
 var cheerio = require("cheerio");
+var marked = require("marked");
+var pygmentize = require("pygmentize-bundled");
 
 var app = express();
 // Settings
 app.set("baseURL", "/home/petschekr/Videos/");
 app.disable("hidden-files");
+app.enable("markdown");
+
 app.enable("transcoding");
 app.enable("print-root-directory");
 
@@ -108,7 +112,7 @@ app.get("/file/*", function (request, response) {
 	var zefile = request.params[0];
 	zefile = pathModule.basename(zefile);
 	var htmldoc = fs.readFileSync("file.html", {encoding: "utf8"});
-	$ = cheerio.load(htmldoc);
+	var $ = cheerio.load(htmldoc);
 	$("title").text(zefile);
 	$("h1").text(zefile);
 	var mimeType = mime.lookup(zefile);
@@ -130,6 +134,11 @@ app.get("/file/*", function (request, response) {
 			continueResponse();
 		});
 	}
+	else if (mimeType === "text/x-markdown") {
+		var viewLink = "/view/" + request.params[0];
+		$("div > a").text("View Markdown").attr("href", viewLink);
+		continueResponse();
+	}
 	else {
 		var staticLink = "/raw/" + request.params[0];
 		$("div > a").text("View raw").attr("href", staticLink);
@@ -147,6 +156,45 @@ app.get("/file/*", function (request, response) {
 			$("#size").text(readableSize(stats.size));
 			response.send($.html());
 		});
+	}
+});
+app.get("/view/*", function (request, response) {
+	var zefile = request.params[0];
+	var mimeType = mime.lookup(zefile);
+
+	switch (mimeType) {
+		case "text/x-markdown":
+			fs.readFile(app.get("baseURL") + request.params[0], {encoding: "utf8"}, function (err, markdown) {
+				if (err) {
+					response.send("Couldn't retrieve the requested file");
+					return;
+				}
+				var MDoptions = {
+					gfm: false,
+					smartypants: true,
+					highlight: function (code, lang, callback) {
+						pygmentize({lang:lang, format:"html"}, code, function (err, result) {
+							if (err)
+								return callback(err);
+							callback(null, result.toString());
+						});
+					}
+				};
+				marked(markdown, MDoptions, function (err, content) {
+					if (err) {
+						response.send("There was an error rendering the Markdown");
+						return;
+					}
+					fs.readFile("markdown.html", {encoding: "utf8"}, function (err, template) {
+						if (err)
+							return response.send(content);
+						var $ = cheerio.load(template);
+						$("title").text(zefile);
+						$("body").html(content);
+						response.send($.html());
+					});
+				});
+			});
 	}
 });
 app.get("/raw/*", function (request, response) {
