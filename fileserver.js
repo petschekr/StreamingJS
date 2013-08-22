@@ -111,7 +111,7 @@ app.get("/dir/*", function (request, response) {
 app.get("/file/*", function (request, response) {
 	var zefile = request.params[0];
 	zefile = pathModule.basename(zefile);
-	var htmldoc = fs.readFileSync("file.html", {encoding: "utf8"});
+	var htmldoc = fs.readFileSync("views/file.html", {encoding: "utf8"});
 	var $ = cheerio.load(htmldoc);
 	$("title").text(zefile);
 	$("h1").text(zefile);
@@ -185,7 +185,7 @@ app.get("/view/*", function (request, response) {
 						response.send("There was an error rendering the Markdown");
 						return;
 					}
-					fs.readFile("markdown.html", {encoding: "utf8"}, function (err, template) {
+					fs.readFile("views/markdown.html", {encoding: "utf8"}, function (err, template) {
 						if (err)
 							return response.send(content);
 						var $ = cheerio.load(template);
