@@ -141,7 +141,10 @@ app.get("/file/*", function (request, response) {
 	}
 	else {
 		var staticLink = "/raw/" + request.params[0];
+		var styledLink = "/view/" + request.params[0];
 		$("div > a").text("View raw").attr("href", staticLink);
+		$("div").append('<a id="styled"></a>');
+		$("#styled").text("View styled").attr("href", styledLink);
 		continueResponse();
 	}
 	function continueResponse() {
@@ -213,7 +216,8 @@ app.get("/view/*", function (request, response) {
 						return response.send(code);
 					var $ = cheerio.load(codeTemplate);
 					$("title").text(pathModule.basename(zefile));
-					$("body").html(highlightedCode);
+					$("body").append(highlightedCode);
+					$("a").attr("href", "/file/" + zefile);
 					response.send($.html());
 				});
 			});
