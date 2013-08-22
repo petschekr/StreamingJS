@@ -161,40 +161,63 @@ app.get("/file/*", function (request, response) {
 app.get("/view/*", function (request, response) {
 	var zefile = request.params[0];
 	var mimeType = mime.lookup(zefile);
-
-	switch (mimeType) {
-		case "text/x-markdown":
-			fs.readFile(app.get("baseURL") + request.params[0], {encoding: "utf8"}, function (err, markdown) {
+	var extension = pathModule.basename(zefile).split(".")[1];
+	
+	if (mimeType === "text/x-markdown") {
+		fs.readFile(app.get("baseURL") + request.params[0], {encoding: "utf8"}, function (err, markdown) {
+			if (err) {
+				response.send("Couldn't retrieve the requested file");
+				return;
+			}
+			var MDoptions = {
+				gfm: false,
+				smartypants: true,
+				highlight: function (code, lang, callback) {
+					pygmentize({lang:lang, format:"html"}, code, function (err, result) {
+						if (err)
+							return callback(err);
+						callback(null, result.toString());
+					});
+				}
+			};
+			marked(markdown, MDoptions, function (err, content) {
 				if (err) {
-					response.send("Couldn't retrieve the requested file");
+					response.send("There was an error rendering the Markdown");
 					return;
 				}
-				var MDoptions = {
-					gfm: false,
-					smartypants: true,
-					highlight: function (code, lang, callback) {
-						pygmentize({lang:lang, format:"html"}, code, function (err, result) {
-							if (err)
-								return callback(err);
-							callback(null, result.toString());
-						});
-					}
-				};
-				marked(markdown, MDoptions, function (err, content) {
-					if (err) {
-						response.send("There was an error rendering the Markdown");
-						return;
-					}
-					fs.readFile("views/markdown.html", {encoding: "utf8"}, function (err, template) {
-						if (err)
-							return response.send(content);
-						var $ = cheerio.load(template);
-						$("title").text(zefile);
-						$("body").html(content);
-						response.send($.html());
-					});
+				fs.readFile("views/markdown.html", {encoding: "utf8"}, function (err, template) {
+					if (err)
+						return response.send(content);
+					var $ = cheerio.load(template);
+					$("title").text(pathModule.basename(zefile));
+					$("body").html(content);
+					response.send($.html());
 				});
 			});
+		});
+	}
+	else {
+		fs.readFile(app.get("baseURL") + request.params[0], {encoding: "utf8"}, function (err, code) {
+			if (err) {
+				response.send("Couldn't retrieve the requested file");
+				return;
+			}
+			pygmentize({lang:extension, format:"html"}, code, function (err, result) {
+				if (err) {
+					response.send(err);
+					return;
+				}
+				var highlightedCode = result.toString();
+				fs.readFile("views/code.html", {encoding: "utf8"}, function (err, codeTemplate) {
+					if (err)
+						return response.send(code);
+					var $ = cheerio.load(codeTemplate);
+					$("title").text(pathModule.basename(zefile));
+					$("body").html(highlightedCode);
+					response.send($.html());
+				});
+			});
+		});
 	}
 });
 app.get("/raw/*", function (request, response) {
