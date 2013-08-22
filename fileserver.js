@@ -7,6 +7,7 @@ var express = require("express");
 var mime = require("mime");
 var cheerio = require("cheerio");
 var marked = require("marked");
+var pygmentize = require("pygmentize-bundled");
 
 var app = express();
 // Settings
@@ -140,8 +141,12 @@ app.get("/file/*", function (request, response) {
 			var MDoptions = {
 				gfm: false,
 				smartypants: true,
-				highlight: function (code, lang) {
-					return code;
+				highlight: function (code, lang, callback) {
+					pygmentize({lang:lang, format:"html"}, code, function (err, result) {
+						if (err)
+							return callback(err);
+						callback(null, result.toString());
+					});
 				}
 			};
 			marked(markdown, MDoptions, function (err, content) {
