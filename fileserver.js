@@ -7,10 +7,6 @@ var express = require("express");
 var mime = require("mime");
 var cheerio = require("cheerio");
 var marked = require("marked");
-marked.setOptions({
-	gfm: false,
-	smartypants: true
-});
 
 var app = express();
 // Settings
@@ -135,6 +131,30 @@ app.get("/file/*", function (request, response) {
 			$("div").html('<a href="' + staticLink + '"><img style="max-width:100%;" alt="' + zefile + '" src="' + dataURI + '" /></a>');
 			$("body").attr("style", "padding-bottom: 0;");
 			continueResponse();
+		});
+	}
+	else if (mimeType === "text/x-markdown") {
+		fs.readFile(app.get("baseURL") + request.params[0], {encoding: "utf8"}, function (err, markdown) {
+			if (err)
+				return
+			var MDoptions = {
+				gfm: false,
+				smartypants: true,
+				highlight: function (code, lang) {
+					return code;
+				}
+			};
+			marked(markdown, MDoptions, function (err, content) {
+				if (err) {
+					console.error(err);
+					var staticLink = "/raw/" + request.params[0];
+					$("div > a").text("View raw").attr("href", staticLink);
+					continueResponse();
+					return;
+				}
+				$("div").html(content).attr("style", "max-height: 500px; overflow: scroll;");
+				continueResponse();
+			});
 		});
 	}
 	else {
