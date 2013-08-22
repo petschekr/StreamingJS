@@ -232,7 +232,13 @@ app.get("/raw/*", function (request, response) {
 			response.send("Couldn't retrieve the requested file");
 			return
 		}
-		response.type(mimeType);
+		// Prevent HTML files from being sent with HTML mime type and therefore rendered in the browser
+		if (mimeType !== "text/html") {
+			response.type(mimeType);
+		}
+		else {
+			response.type("text/plain");
+		}
 		response.send(file);
 	});
 });
