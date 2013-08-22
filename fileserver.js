@@ -6,11 +6,18 @@ var pathModule = require("path");
 var express = require("express");
 var mime = require("mime");
 var cheerio = require("cheerio");
+var marked = require("marked");
+marked.setOptions({
+	gfm: false,
+	smartypants: true
+});
 
 var app = express();
 // Settings
 app.set("baseURL", "/home/petschekr/Videos/");
 app.disable("hidden-files");
+app.enable("markdown");
+
 app.enable("transcoding");
 app.enable("print-root-directory");
 
